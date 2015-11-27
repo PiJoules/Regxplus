@@ -16,12 +16,6 @@ class RegexCrosswordGenerator(object):
                           "1234567890")
 
     def __init__(self, width=2, height=2):
-        """
-        width:
-            Width of the desired grid.
-        height:
-            Height of the desired grid.
-        """
         self._w = width
         self._h = height
         grid = self._generate_grid(width, height)
@@ -51,6 +45,14 @@ class RegexCrosswordGenerator(object):
     @property
     def cols(self):
         return self._cols
+
+    @property
+    def width(self):
+        return self._w
+
+    @property
+    def height(self):
+        return self._h
 
     def _generate_grid(self, w, h):
         """
@@ -98,13 +100,13 @@ class RegexCrosswordGenerator(object):
         Check that a solution works for the rows and cols.
         """
         for i in xrange(len(self._rows)):
-            m = self._rows[i].match(solution[i])
+            m = self._rows[i].match(solution[i].upper())
             if not m or len(m.group(0)) != self._w:
                 return False
 
         for i in xrange(len(self._cols)):
             m = self._cols[i].match(
-                reduce(lambda x, y: x + y[i], solution, ""))
+                reduce(lambda x, y: x + y[i], solution, "").upper())
             if not m or len(m.group(0)) != self._h:
                 return False
 
