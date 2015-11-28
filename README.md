@@ -5,7 +5,7 @@ I was sad that there was a limited number of these puzzles since they were so mu
 
 Edit: I just found out that [Regex Crossword](https://regexcrossword.com/) allows for user submitted puzzles. Regardless, this was still fun to make.
 
-¯\_(ツ)_/¯
+¯\\_(ツ)_/¯
 
 ## Setup
 ```sh
