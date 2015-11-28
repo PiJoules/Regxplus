@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block body %}
+<!-- Main jumbotron for a primary marketing message or call to action -->
+<div class="jumbotron">
+    <div class="container">
+        <h1>[Regx]+</h1>
+        <p>This website generates random regular expression crossword puzzles for you to enjoy.</p>
+        <p><a class="btn btn-info btn-lg" href="/puzzle/beginner">Start &raquo;</a></p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-4">
+            <h2>Beginner</h2>
+            <p>Some simple puzzles to get you started.</p>
+            <p><a class="btn btn-success" href="/puzzle/beginner">Start &raquo;</a></p>
+        </div>
+        <div class="col-sm-4">
+            <h2>Intermediate</h2>
+            <p>For all you regular folk out there who only have a few minutes left on the train.</p>
+            <p><a class="btn btn-success" href="/puzzle/intermediate">Start &raquo;</a></p>
+        </div>
+        <div class="col-sm-4">
+            <h2>Expert</h2>
+            <p>(Generic challenging text to both intimidate and excite you).</p>
+            <p><a class="btn btn-success" href="/puzzle/expert">Start &raquo;</a></p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-4">
+            <h2>Random</h2>
+            <p>I made this one first. The difficulties are just filters over this.</p>
+            <p><a class="btn btn-success" href="/puzzle/random">Start &raquo;</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

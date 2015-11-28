@@ -7,6 +7,7 @@ Edit: I just found out that [Regex Crossword](https://regexcrossword.com/) allow
 
 ¯\\_(ツ)_/¯
 
+
 ## Setup
 ```sh
 $ source setup.sh  # Install the dependencies via pip
@@ -14,3 +15,6 @@ $ python __init__.py  # Start the server
 ```
 
 Go to [http://localhost:5000](http://localhost:5000) to view it.
+
+## Updates
+More patterns to come.
