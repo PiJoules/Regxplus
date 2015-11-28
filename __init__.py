@@ -6,7 +6,7 @@ vendor.add('lib')
 
 
 # Import the Flask Framework
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 app = Flask(__name__)
 
 import random
@@ -16,7 +16,9 @@ from regex_generator import RegexCrosswordGenerator
 
 @app.route('/')
 def index():
-    x = RegexCrosswordGenerator(random.randint(2, 4), random.randint(2, 4))
+    w = max(min(int(request.args.get("w") or random.randint(2, 10)), 10), 2)
+    h = max(min(int(request.args.get("h") or random.randint(2, 10)), 10), 2)
+    x = RegexCrosswordGenerator(w, h)
     return render_template(
         "index.html",
         rows=x.rows,
