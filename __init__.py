@@ -6,7 +6,7 @@ vendor.add('lib')
 
 
 # Import the Flask Framework
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, current_app
 app = Flask(__name__)
 
 import random
@@ -22,7 +22,7 @@ def index_route():
 
 @app.route("/puzzle/")
 def puzzle_route():
-    with open('subheaders.json') as f:
+    with current_app.open_resource('subheaders.json') as f:
         subheader = random.choice(json.load(f))
     w = request.args.get("w")
     h = request.args.get("h")
@@ -42,7 +42,7 @@ def puzzle_route():
 
 @app.route("/puzzle/double/")
 def puzzle_double_route():
-    with open('subheaders.json') as f:
+    with current_app.open_resource('subheaders.json') as f:
         subheader = random.choice(json.load(f))
         w = random.randint(2, 10)
         h = random.randint(2, 10)
@@ -61,7 +61,7 @@ def puzzle_double_route():
 
 @app.route("/puzzle/more_expert/")
 def puzzle_guru_route():
-    with open('subheaders.json') as f:
+    with current_app.open_resource('subheaders.json') as f:
         subheader = random.choice(json.load(f))
     x = RegexCrosswordGenerator(12, 12)
     return render_template(
@@ -77,7 +77,7 @@ def puzzle_guru_route():
 
 @app.route("/puzzle/alice/")
 def puzzle_alice_route():
-    with open('subheaders.json') as f:
+    with current_app.open_resource('subheaders.json') as f:
         subheader = random.choice(json.load(f))
     w = random.randint(2, 10)
     h = random.randint(2, 10)
@@ -96,7 +96,7 @@ def puzzle_alice_route():
 
 @app.route("/puzzle/shakespeare/")
 def puzzle_shakespeare_route():
-    with open('subheaders.json') as f:
+    with current_app.open_resource('subheaders.json') as f:
         subheader = random.choice(json.load(f))
     w = random.randint(2, 10)
     h = random.randint(2, 10)
@@ -115,7 +115,7 @@ def puzzle_shakespeare_route():
 
 @app.route("/puzzle/huck/")
 def puzzle_huck_route():
-    with open('subheaders.json') as f:
+    with current_app.open_resource('subheaders.json') as f:
         subheader = random.choice(json.load(f))
     w = random.randint(2, 10)
     h = random.randint(2, 10)
@@ -134,7 +134,7 @@ def puzzle_huck_route():
 
 @app.route("/puzzle/<difficulty>/")
 def puzzle_route_difficulty(difficulty=None):
-    with open('subheaders.json') as f:
+    with current_app.open_resource('subheaders.json') as f:
         subheader = random.choice(json.load(f))
     if difficulty == "beginner":
         w = random.randint(2, 4)
