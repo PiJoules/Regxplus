@@ -15,8 +15,10 @@ class RegexCrosswordGenerator(object):
     ALLOWED_CHARACTERS = ("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                           "1234567890")
 
-    def __init__(self, width=2, height=2):
-        self.reset(width, height)
+    def __init__(self, width=2, height=2, use_real_words=False,
+                 textfile="texts/words.txt"):
+        self.reset(width, height, use_real_words=use_real_words,
+                   textfile=textfile)
 
     @property
     def possible_solution(self):
@@ -31,6 +33,14 @@ class RegexCrosswordGenerator(object):
         return self._cols
 
     @property
+    def rows2(self):
+        return self._rows2
+
+    @property
+    def cols2(self):
+        return self._cols2
+
+    @property
     def width(self):
         return self._w
 
@@ -38,7 +48,8 @@ class RegexCrosswordGenerator(object):
     def height(self):
         return self._h
 
-    def reset(self, width, height):
+    def reset(self, width, height, use_real_words=False,
+              textfile="texts/words.txt"):
         """
         Create a new crossword.
         """
@@ -46,16 +57,27 @@ class RegexCrosswordGenerator(object):
 
         self._w = width
         self._h = height
-        grid = self._generate_grid(width, height)
+        grid = self._generate_grid(
+            width, height, use_real_words=use_real_words, textfile=textfile)
         rows = [""] * height
         cols = [""] * width
+        rows2 = [""] * height
+        cols2 = [""] * width
         for i in xrange(height):
             rows[i] = self._regex_from_string(grid[i])
+            rows2[i] = self._regex_from_string(grid[i])
+            while rows[i] == rows2[i]:
+                rows2[i] = self._regex_from_string(grid[i])
         for i in xrange(width):
-            cols[i] = self._regex_from_string(
-                "".join(map(lambda x: x[i], grid)))
+            col = "".join(map(lambda x: x[i], grid))
+            cols[i] = self._regex_from_string(col)
+            cols2[i] = self._regex_from_string(col)
+            while cols[i] == cols2[i]:
+                cols2[i] = self._regex_from_string(col)
         self._rows = rows
         self._cols = cols
+        self._rows2 = rows2
+        self._cols2 = cols2
         self._grid = grid
 
         # Just make sure the regex generated from the grid
@@ -70,19 +92,39 @@ class RegexCrosswordGenerator(object):
                 "Rows:",
                 "\n".join(map(lambda x: x.pattern, rows)),
                 "Cols:",
-                "\n".join(map(lambda x: x.pattern, cols))
+                "\n".join(map(lambda x: x.pattern, cols)),
+                "Rows2:",
+                "\n".join(map(lambda x: x.pattern, rows2)),
+                "Cols2:",
+                "\n".join(map(lambda x: x.pattern, cols2))
             ]), file=sys.stderr)
             raise AssertionError
 
-    def _generate_grid(self, w, h):
+    def _generate_grid(self, w, h, use_real_words=False,
+                       textfile="texts/words.txt"):
         """
         Generate a grid of random characters.
         This will be one of the possible solutions to the
         crossword.
         """
         grid = []
-        for i in xrange(h):
-            grid.append("".join(random.sample(self.ALLOWED_CHARACTERS, w)))
+        if use_real_words:
+            with open(textfile) as f:
+                used_words = set()
+                text = f.read().split()
+                s = ""
+                word = random.choice(text).strip().upper()
+                while len(s) < w * h:
+                    if word.isalnum() and word not in used_words:
+                        s += word
+                        used_words.add(word)
+                    word = random.choice(text).strip().upper()
+                for i in xrange(h):
+                    grid.append(s[:w])
+                    s = s[w:]
+        else:
+            for i in xrange(h):
+                grid.append("".join(random.sample(self.ALLOWED_CHARACTERS, w)))
         return grid
 
     def _alternate_string(self, string):
@@ -101,14 +143,29 @@ class RegexCrosswordGenerator(object):
         Check that a solution works for the rows and cols.
         """
         for i in xrange(len(self._rows)):
-            m = self._rows[i].match(solution[i].upper())
+            row = solution[i].upper()
+            m = self._rows[i].match(row)
             if not m or len(m.group(0)) != self._w:
+                print("The pattern {} does not work for row {}"
+                      .format(self._rows[i].pattern, row))
+                return False
+            m = self._rows2[i].match(row)
+            if not m or len(m.group(0)) != self._w:
+                print("The pattern {} does not work for row {}"
+                      .format(self._rows2[i].pattern, row))
                 return False
 
         for i in xrange(len(self._cols)):
-            m = self._cols[i].match(
-                reduce(lambda x, y: x + y[i], solution, "").upper())
+            col = reduce(lambda x, y: x + y[i], solution, "").upper()
+            m = self._cols[i].match(col)
             if not m or len(m.group(0)) != self._h:
+                print("The pattern {} does not work for col {}"
+                      .format(self._col[i].pattern, col))
+                return False
+            m = self._cols2[i].match(col)
+            if not m or len(m.group(0)) != self._h:
+                print("The pattern {} does not work for col {}"
+                      .format(self._col2[i].pattern, col))
                 return False
 
         return True
@@ -120,12 +177,14 @@ class RegexCrosswordGenerator(object):
         patterns = [
             self._pattern1, self._pattern2, self._pattern3, self._pattern4,
             self._pattern5, self._pattern6, self._pattern7, self._pattern8,
-            self._pattern9, self._pattern10
+            self._pattern9, self._pattern10, self._pattern11, self._pattern12,
+            self._pattern13, self._pattern14, self._pattern15, self._pattern16,
+            self._pattern17, self._pattern18
         ]
         end = random.choice("+*")
         return re.compile(random.choice(patterns)(string, end=end))
 
-    def run_many_times(self, n=1000):
+    def run_many_times(self, n=10000):
         """
         Create many crosswords to make sure the patterns work.
         """
@@ -140,6 +199,9 @@ class RegexCrosswordGenerator(object):
         """
         Pat1|Pat2|Pat3
         """
+        if len(string) > 5:
+            return self._pattern5(string)
+
         pos = random.randint(0, length - 1)
         patterns = []
         for i in xrange(length):
@@ -153,13 +215,19 @@ class RegexCrosswordGenerator(object):
         """
         [ccc...](end)
         """
-        return "[" + "".join(sorted(set(string))) + "]" + end
+        if len(string) > 5:
+            return self._pattern5(string)
+        c = random.choice(self.ALLOWED_CHARACTERS)  # Add a random character
+        return "[" + "".join(sorted(set(string + c))) + "]" + end
 
-    def _pattern3(self, string, length=5, end="+", **kwargs):
+    def _pattern3(self, string, length=4, end="+", **kwargs):
         """
         [^ccc...](end)
         """
-        chars = set(self.ALLOWED_CHARACTERS) - set(string)
+        if len(string) > 5:
+            return self._pattern5(string)
+        c = random.choice(self.ALLOWED_CHARACTERS)  # Add a random character
+        chars = set(self.ALLOWED_CHARACTERS) - set(string + c)
         chars = random.sample(chars, length)
         return "[^" + "".join(sorted(chars)) + "]" + end
 
@@ -167,6 +235,8 @@ class RegexCrosswordGenerator(object):
         """
         Pat1|Pat2|c(end)
         """
+        if len(string) > 5:
+            return self._pattern18(string)
         return (self._pattern1(string, 2) + "|" +
                 random.choice(self.ALLOWED_CHARACTERS) + end)
 
@@ -276,9 +346,158 @@ class RegexCrosswordGenerator(object):
             # String contains all unique characters
             return self._pattern9(string)
 
+    def _pattern11(self, string, **kwargs):
+        """
+        [^ccc...]+.
+        """
+        cutoff = random.randint(1, len(string) / 2)
+        if cutoff < 3:
+            end = "+" + "." * cutoff
+        else:
+            end = "+" + ".{" + str(cutoff) + "}"
+        return self._pattern3(string[:len(string) - cutoff], end=end)
+
+    def _pattern12(self, string, **kwargs):
+        """
+        [^ccc...]+.*(cutoff)cc(cutoff2)
+        """
+        if len(string) < 3:
+            return self._pattern6(string)
+        else:
+            cutoff1 = len(string) / 2
+            cutoff2 = random.randint(cutoff1 + 1, len(string) - 1)
+            return (self._pattern3(string[:cutoff1], end=".+") +
+                    self._pattern2(string[cutoff2:]))
+
+    def _pattern13(self, string, **kwargs):
+        """
+        [^ccc...](cutoff)(Pat1|Pat2|Pat3)
+        """
+        if len(string) < 4:
+            return self._pattern1(string)
+        else:
+            cutoff = random.randint(2, len(string) - 2)
+            return (self._pattern3(string[:cutoff]) +
+                    "(" + self._pattern1(string[cutoff:]) + ")")
+
+    def _pattern14(self, string, **kwargs):
+        """
+        (Pat1|Pat2|Pat3)[^ccc...](cutoff)
+        """
+        if len(string) < 4:
+            return self._pattern1(string)
+        else:
+            cutoff = random.randint(2, len(string) - 2)
+            return ("(" + self._pattern1(string[:cutoff]) + ")" +
+                    self._pattern3(string[cutoff:]))
+
+    def _pattern15(self, string, end="+", **kwargs):
+        """
+        (c|Pat1|Pat2)(end)
+        """
+        duplicates = set(filter(lambda x: string.count(x) > 1, string))
+        if duplicates and len(set(string)) > 2:
+            c = duplicates.pop()
+            chunks = filter(lambda x: bool(x), string.split(c) + [c])
+            return "(" + "|".join(chunks) + ")" + end
+        else:
+            return "(" + self._pattern1(string) + ")"
+
+    def _pattern16(self, string, start="+", end="*", **kwargs):
+        """
+        [ccc...](start)[ccc...](end)
+        [^ccc...](start)[ccc...](end)
+        [ccc...](start)[^ccc...](end)
+        [^ccc...](start)[^ccc...](end)
+        """
+        if len(string) < 4:
+            return self._pattern5(string)
+        else:
+            cutoff = random.randint(2, len(string) - 2)
+            if random.randint(0, 1):
+                first = self._pattern2(string[:cutoff], end=start)
+            else:
+                first = self._pattern3(string[:cutoff], end=start)
+            if random.randint(0, 1):
+                last = self._pattern2(string[cutoff:], end=end)
+            else:
+                last = self._pattern3(string[cutoff:], end=end)
+            return first + last
+
+    def _pattern17(self, string, start="+", end="+", **kwargs):
+        """
+        [ccc...](start)c?[ccc...](end)
+        [ccc...](start).?[ccc...](end)
+        Pattern 16 with optional char in middle.
+        """
+        if len(string) < 5:
+            return self._pattern5(string)
+        elif random.randint(0, 1):
+            # Do not use char
+            cutoff = random.randint(2, len(string) - 2)
+            if random.randint(0, 1):
+                first = self._pattern2(string[:cutoff], end=start)
+            else:
+                first = self._pattern3(string[:cutoff], end=start)
+            if random.randint(0, 1):
+                last = self._pattern2(string[cutoff:], end=end)
+            else:
+                last = self._pattern3(string[cutoff:], end=end)
+            if random.randint(0, 1):
+                c = random.choice(self.ALLOWED_CHARACTERS)
+            else:
+                c = "."
+            return first + c + "?" + last
+        else:
+            cutoff = random.randint(2, len(string) - 3)
+            if random.randint(0, 1):
+                c = string[cutoff]
+            else:
+                c = "."
+            if random.randint(0, 1):
+                first = self._pattern2(string[:cutoff], end=start)
+            else:
+                first = self._pattern3(string[:cutoff], end=start)
+            if random.randint(0, 1):
+                last = self._pattern2(string[cutoff + 1:], end=end)
+            else:
+                last = self._pattern3(string[cutoff + 1:], end=end)
+            return first + c + "?" + last
+
+    def _pattern18(self, string, **kwargs):
+        """
+        [ccc...]*/+.*/+[ccc...]*/+
+        .*/+[ccc...]*/+[ccc...]*/+
+        [ccc...]*/+[ccc...]*/+.*/+
+
+        Any combination of size 3 for:
+        [ccc...]*/+, [^ccc...]*/+
+        .*/+, (Pat1|Pat2|Pat3) (pattern 15)
+        """
+        if len(string) < 6:
+            return self._pattern17(string)
+        else:
+            chunks = [
+                string[:len(string) / 3],
+                string[len(string) / 3:len(string) * 2 / 3],
+                string[len(string) * 2 / 3:]
+            ]
+            patterns = ["", "", ""]
+            for i in xrange(3):
+                end = "+" if random.randint(0, 1) else "*"
+                patterns[i] = random.choice([
+                    self._pattern2(chunks[i], end=end),
+                    self._pattern3(chunks[i], end=end),
+                    "." + end,
+                    "(" + self._pattern1(chunks[i]) + ")"
+                ])
+            return "".join(patterns)
+
 
 def main():
     x = RegexCrosswordGenerator(2, 4)
+    x.run_many_times()
+    x = RegexCrosswordGenerator(2, 4, use_real_words=True)
     x.run_many_times()
     return 0
 

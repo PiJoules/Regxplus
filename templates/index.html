@@ -10,6 +10,15 @@
 {% endblock %}
 
 {% block body %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="page-header">
+                <h1>{{ header }} <small>{{ subheader }}</small></h1>
+            </div>
+        </div>
+    </div>
+</div>
 <div id="puzzle-wrapper"><!-- crossword puzzle appended here --></div>
 <div class="container">
     <div class="row">
@@ -50,7 +59,7 @@
             var puzzleData = [
                 {% for row in rows %}
                 {
-                    clue: "{{ row.pattern|replace('\\', '\\\\') }}",
+                    clue: "{{ row[0].pattern|replace('\\', '\\\\') }}{% if double %}<br>{{ row[1].pattern|replace('\\', '\\\\') }}{% endif %}",
                     answer: "{{ filler_row }}",
                     position: {{ loop.index }},
                     orientation: "across",
@@ -60,7 +69,7 @@
                 {% endfor %}
                 {% for col in cols %}
                 {
-                    clue: "{{ col.pattern|replace('\\', '\\\\') }}",
+                    clue: "{{ col[0].pattern|replace('\\', '\\\\') }}{% if double %}<br>{{ col[1].pattern|replace('\\', '\\\\') }}{% endif %}",
                     answer: "{{ filler_col }}",
                     position: {{ loop.index }},
                     orientation: "down",
@@ -81,7 +90,7 @@
             var c = ($('[data-coords="' + x + ',' + {{ loop.index }} + '"] input').val() || " ").toUpperCase();
             row += c;
         }
-        if (!/^{{ row.pattern }}$/.test(row)){
+        if (!/^{{ row[0].pattern }}$/.test(row){% if double %} || !/^{{ row[1].pattern }}$/.test(row){% endif %}){
             failedValidation();
             return;
         }
@@ -92,7 +101,7 @@
             var c = ($('[data-coords="' + {{ loop.index }} + ',' + y + '"] input').val() || " ").toUpperCase();
             col += c;
         }
-        if (!/^{{ col.pattern }}$/.test(col)){
+        if (!/^{{ col[0].pattern }}$/.test(col){% if double %} || !/^{{ col[1].pattern }}$/.test(col){% endif %}){
             failedValidation();
             return;
         }
@@ -101,7 +110,7 @@
     });
 
     $(".clear").click(function(){
-        for (var y = 1; y < {{ rows|length }}; y++){
+        for (var y = 1; y <= {{ rows|length }}; y++){
             for (var x = 1; x <= {{ cols|length }}; x++){
                 $('[data-coords="' + x + ',' + y + '"] input').val("");
             }
