@@ -6,6 +6,8 @@ import sys
 import re
 import random
 
+from flask import current_app
+
 
 class RegexCrosswordGenerator(object):
     """
@@ -109,7 +111,7 @@ class RegexCrosswordGenerator(object):
         """
         grid = []
         if use_real_words:
-            with open(textfile) as f:
+            with current_app.open_resource(textfile) as f:
                 used_words = set()
                 text = f.read().split()
                 s = ""
